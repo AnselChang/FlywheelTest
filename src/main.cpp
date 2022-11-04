@@ -12,7 +12,6 @@
 #include "FixedRingQueue.h"
 #include "SimplePID.h"
 #include "TBH.h"
-#include <math.h>
 
 using namespace vex;
 

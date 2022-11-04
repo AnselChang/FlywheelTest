@@ -1,4 +1,3 @@
-#pragma once
 #include "FixedRingQueue.h"
 
 //template <typename T>

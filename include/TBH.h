@@ -9,6 +9,7 @@ public:
     float getNextMotorVoltage(float currentVelocityRPM);
     void setTargetRPM(float targetVelocityRPM);
     float getTargetRPM() {return targetRPM;}
+    float getTBH() {return tbh;}
 
 private:
 
@@ -18,6 +19,6 @@ private:
     float output = 0;
     float prevError = 0;
     float tbh;
-    bool isFirstCrossover;
+    bool isFirstCrossover = true;
 
 };

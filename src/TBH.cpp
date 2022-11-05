@@ -6,16 +6,18 @@ int sign(double x) {
     return -1;
 }
 
-double clamp(int value, double min, double max) {
+
+float clamp(float value, float min, float max) {
     return fmin(max, fmax(min, value));
 }
 
 
 TBH::TBH(float gainConstant, float initialTargetRPM, std::function<float(float)> rpmToVoltFunction):
     rpmToVolt(rpmToVoltFunction),
-    gain(gainConstant),
-    targetRPM(initialTargetRPM)
-{}
+    gain(gainConstant)
+{
+    setTargetRPM(initialTargetRPM);
+}
 
 float TBH::getNextMotorVoltage(float currentVelocityRPM) {
     
@@ -28,7 +30,7 @@ float TBH::getNextMotorVoltage(float currentVelocityRPM) {
 
         if (isFirstCrossover) { // First zero crossing after a new set velocity command
             // Set drive to the open loop approximation
-            output = rpmToVolt(targetRPM);
+            output = rpmToVolt(targetRPM) + 1;
         } else {
             output = 0.5 * (output + tbh); // Take Back Half
             tbh = output;// update Take Back Half variable

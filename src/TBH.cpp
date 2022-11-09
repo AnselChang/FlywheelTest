@@ -30,13 +30,13 @@ float TBH::getNextMotorVoltage(float currentVelocityRPM) {
 
         if (isFirstCrossover) { // First zero crossing after a new set velocity command
             // Set drive to the open loop approximation
-            output = rpmToVolt(targetRPM) + 1;
+            output = rpmToVolt(targetRPM);
         } else {
             output = 0.5 * (output + tbh); // Take Back Half
-            tbh = output;// update Take Back Half variable
             isFirstCrossover = false;
         }
-        
+
+        tbh = output;// update Take Back Half variable
         prevError = error; // save the previous error
     }
 

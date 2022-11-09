@@ -61,7 +61,7 @@ float rpmToVolt(float rpm) {
 
 }
 
-TBH tbh(0.003, 3600, rpmToVolt);
+TBH tbh(0.0002, 3600, rpmToVolt);
 
 void dec() {
     float target = tbh.getTargetRPM();

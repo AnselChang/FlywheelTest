@@ -1,4 +1,5 @@
 #include "FixedRingQueue.h"
+#include "math.h"
 
 //template <typename T>
 
@@ -37,4 +38,32 @@ float RingQueue::get(int index) {
 
 int RingQueue::getSize() {
   return size;
+}
+
+float RingQueue::standardDeviation() {
+
+  if (size == 0) return 0;
+
+  float sum = 0; // recalc sum to avoid drift
+  int i = firstElement;
+  int count = 0;
+  while (count < size) {
+    sum += arr[i];
+    i = (i + 1) % capacity;
+    count++;
+  }
+  float mean = sum / size;
+
+  float sumsqr = 0; // sum squared
+  i = firstElement;
+  count = 0;
+  while (count < size) {
+    float deviation = arr[i] - mean;
+    sumsqr += deviation*deviation;
+    i = (i + 1) % capacity;
+    count++;
+  }
+
+  return sqrt(sumsqr / size);
+  
 }

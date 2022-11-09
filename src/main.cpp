@@ -7,7 +7,9 @@
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 #include "vex.h"
+#include <iostream>
 #include <string>
+#include <vector>
 #include "VisualGraph.h"
 #include "FixedRingQueue.h"
 #include "SimplePID.h"
@@ -24,12 +26,39 @@ motor flywheel2(PORT3, ratio6_1, false);
 motor_group flywheel(flywheel1, flywheel2);
 controller c;
 
-float voltToRpm(float x) {
-    return -1.1932 * pow(x,4) + 38.3207 * pow(x,3) - 449.6780 * pow(x,2) + 2641.9012 * x - 4496.2554;
+typedef struct Point {
+    float rpm, volt;
+} Point;
+
+std::vector<Point> data = {
+    {1615, 5},
+    {1966, 6},
+    {2306, 7},
+    {2646, 8},
+    {3054, 9},
+    {3416, 10},
+    {3751, 11},
+    {4141, 12}
+};
+
+float voltToRpm(float volt) {
+    
+    int lowerBound = 0;
+    while (lowerBound < data.size() - 2 && data[lowerBound+1].volt < volt) lowerBound++;
+    
+    float percent = (volt - data[lowerBound].volt) / (data[lowerBound+1].volt - data[lowerBound].volt);
+    return data[lowerBound].rpm + (data[lowerBound+1].rpm - data[lowerBound].rpm) * percent;
+
 }
 
-float rpmToVolt(float x) {
-    return 0.0028*x + 0.7502;
+float rpmToVolt(float rpm) {
+
+    int lowerBound = 0;
+    while (lowerBound < data.size() - 2 && data[lowerBound+1].rpm < rpm) lowerBound++;
+    
+    float percent = (rpm - data[lowerBound].rpm) / (data[lowerBound+1].rpm - data[lowerBound].rpm);
+    return data[lowerBound].volt + (data[lowerBound+1].volt - data[lowerBound].volt) * percent;
+
 }
 
 TBH tbh(0.003, 3600, rpmToVolt);
@@ -44,15 +73,38 @@ void inc() {
     if (target < 3550) tbh.setTargetRPM(target + 100);
 }
 
+void tune(float voltage) {
+
+    flywheel.spin(forward, voltage, volt);
+    while (!c.ButtonA.pressing()) {
+        Brain.Screen.clearScreen();
+        Brain.Screen.setCursor(1,1);
+        Brain.Screen.print(flywheel.velocity(rpm));
+        wait(10, msec);
+    }
+    float sum = 0;
+    int N = 200;
+    for (int i = 0; i < N; i++) {
+        sum += flywheel.velocity(rpm);
+        wait(10, msec);
+    }
+    std::cout << voltage << ": " << (sum / N * 6) << std::endl;
+
+}
+
 int main() {
-    
+
+
     c.ButtonDown.pressed(dec);
     c.ButtonUp.pressed(inc);
 
     VisualGraph g(0, 3600, 10, 400, 4);
-    RingQueue averageSpeed(20);
+    RingQueue averageSpeed(50);
 
     SimplePID pid(PIDParameters(5,0,0));
+
+    int count = 0;
+    float sd = 0;
 
     float y = 30;
     while(1) {
@@ -76,6 +128,13 @@ int main() {
         Brain.Screen.print(averageSpeed.getAverage());
         Brain.Screen.setCursor(4,y);
         Brain.Screen.print(tbh.getTBH());
+        Brain.Screen.setCursor(5,y);
+        Brain.Screen.print(sd);
+
+        count = (count + 1) % 100;
+        if (count == 0) {
+            sd = averageSpeed.standardDeviation();
+        }
         
         // Allow other tasks to run
         this_thread::sleep_for(10);

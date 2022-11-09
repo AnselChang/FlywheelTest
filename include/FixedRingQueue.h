@@ -13,6 +13,7 @@ class RingQueue {
   float getAverage();
   float get(int index);
   int getSize();
+  float standardDeviation();
 
   private:
   std::vector<float> arr;
